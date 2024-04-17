@@ -1,49 +1,228 @@
-@startuml sequence
+'combined
+
+@startuml
+title Combined Sequence Diagram for Payment Workflows:
+
 actor Customer
 actor Vendor
-actor "Vending Machine" as VM
-actor "Inventory Database" as DB
+Participant "Vending Machine" as VM
+Database "Inventory Database" as DB
+actor "Payment Gateway" as PG
+actor "Wallet System" as WS
+
+== Card Payment Workflow ==
+
+Customer -> VM: Approach
+Customer -> VM: Tap Card
+activate VM
+VM -> PG: Is Card Recognized?
+activate PG
+alt Card Recognized
+    PG --> VM: Card Validated
+    VM -> VM: Unlock Door
+    VM -> VM: Display "Welcome"
+    VM -> VM: Display "Door is open... Please choose your items"
+    loop Select Items
+        Customer -> VM: Selects Item
+        alt Item Placed Back Incorrectly
+            VM -> VM: Display "Error! Please place the item back in its place."
+        else Item Removed Correctly
+            VM -> VM: Display "You picked up 'A' item [updated in the cart]"
+        end
+        VM -> VM: Update Cart
+    end
+    Customer -> VM: Close Door
+    VM -> VM: Display "Proceeding to payment..."
+    VM -> VM: Check Inventory
+    alt Insufficient Inventory
+        VM -> Vendor: Alert for Restocking
+        Vendor -> Vendor: Check Inventory Report
+        Vendor -> Vendor: Restock Items
+        Vendor -> DB: Update Product Database
+        Vendor --> VM: Inventory Restocked
+    else Sufficient Inventory
+        alt Successful Transaction
+            VM -> PG: Charge Card
+            PG --> VM: Card Charged for Items Taken
+            VM -> VM: Display "Transaction Complete"
+            PG --> Customer: Transaction Complete
+        else Transaction Declined
+            VM -> VM: Display "Transaction Declined: Insufficient Funds"
+            PG --> Customer: Transaction Declined
+        end
+    end
+else Card Not Recognized
+    VM -> VM: Display "Invalid Card. Please try again."
+end
+
+deactivate VM
+deactivate PG
+
+== QR Payment Workflow ==
+
+Customer -> VM: Approach
+Customer -> VM: Scans QR code
+activate VM
+VM -> WS: Is QR Code Recognized?
+activate WS
+alt QR Code Recognized
+    WS --> VM: QR Code Validated
+    VM -> VM: Unlock Door
+    VM -> VM: Display "Welcome"
+    VM -> VM: Display "Please pick your items"
+    loop Select Items
+        Customer -> VM: Selects Item
+        alt Item Placed Back Incorrectly
+            VM -> VM: Display "Error! Please place the item back in its place."
+        else Item Removed Correctly
+            VM -> VM: Display "You picked up 'A' item [updated in the cart]"
+        end
+        VM -> VM: Update Cart
+    end
+    Customer -> VM: Close Door
+    VM -> VM: Display "Proceeding to payment..."
+    VM -> VM: Check Inventory
+    alt Insufficient Inventory
+        VM -> Vendor: Alert for Restocking
+        Vendor -> Vendor: Check Inventory Report
+        Vendor -> Vendor: Restock Items
+        Vendor -> DB: Update Product Database
+        Vendor --> VM: Inventory Restocked
+    else Sufficient Inventory
+        VM -> WS: Deduct Amount from Wallet
+        VM -> VM: Display "Transaction Complete"
+        WS --> Customer: Transaction Complete
+    end
+else QR Code Not Recognized
+    VM -> VM: Display "Invalid QR code. Please try again."
+end
+
+deactivate VM
+deactivate WS
+@enduml
+
+
+
+
+'card payment only
+
+@startuml
+
+title Sequence Diagram for Card Payment Workflow:
+actor Customer
+actor Vendor
+Participant "Vending Machine" as VM
+Database "Inventory Database" as DB
 actor "Payment Gateway" as PG
 
 Customer -> VM: Approach
-Customer -> VM: Tap Card/QR code
+Customer -> VM: Tap Card
 activate VM
-VM -> PG: Is Card/QR Recognized?
+VM -> PG: Is Card Recognized?
 activate PG
 alt Card Recognized
-    PG --> VM: Card/QR Validated
+    PG --> VM: Card Validated
     VM -> VM: Unlock Door
     VM -> VM: Display "Welcome"
-    VM -> VM: Display "Validating card/QR"
-    alt Valid Card/QR
-        VM -> VM: Display "Door opened... Choose your items"
-        Customer -> VM: Select Items
-        loop Select Items
-            Customer -> VM: Selects Item
-            VM -> VM: Display "You picked up A item, updates in cart"
-            alt Item Placed Back Incorrectly
-                VM -> VM: Display "Error! : Please place the item back in its place to continue"
-            end
+    VM -> VM: Display "Door is open... Please choose your items"
+    loop Select Items
+        Customer -> VM: Selects Item
+        alt Item Placed Back Incorrectly
+            VM -> VM: Display "Error! Please place the item back in its place."
+        else Item Removed Correctly
+            VM -> VM: Display "You picked up 'A' item [updated in the cart]"
         end
-        
-        VM -> VM: Display "You sure you wanna continue to payment?"
-        Customer -> VM: Close Door
-        VM -> VM: Check Inventory
-        alt Inventory Not Low
-            VM -> PG: Charge Card/Wallet
-            PG --> VM: Card/Wallet Charged for Items Taken
+        VM -> VM: Update Cart
+    end
+    Customer -> VM: Close Door
+    VM -> VM: Display "Proceeding to payment..."
+    VM -> VM: Check Inventory
+    alt Insufficient Inventory
+        VM -> Vendor: Alert for Restocking
+        Vendor -> Vendor: Check Inventory Report
+        Vendor -> Vendor: Restock Items
+        Vendor -> DB: Update Product Database
+        Vendor --> VM: Inventory Restocked
+    else Sufficient Inventory
+        alt Successful Transaction
+            VM -> PG: Charge Card
+            PG --> VM: Card Charged for Items Taken
             VM -> VM: Display "Transaction Complete"
             PG --> Customer: Transaction Complete
-        else Inventory Low
-            VM -> Vendor: Alert for Restocking
-            Vendor -> Vendor: Check Inventory Report
-            Vendor -> Vendor: Restock Items
-            Vendor -> DB: Update Product Database
+        else Transaction Declined
+            VM -> VM: Display "Transaction Declined: Insufficient Funds"
+            PG --> Customer: Transaction Declined
         end
-    else Invalid Card
-        VM -> VM: Display "Not found, door not open... Try again or with a different card/QR"
     end
-else Card/QR Not Recognized
-    VM -> VM: Display "Invalid Card/QR"
+else Card Not Recognized
+    VM -> VM: Display "Invalid Card. Please try again."
 end
+
+deactivate VM
+deactivate PG
+@enduml
+
+
+
+
+
+' QR payment only
+
+@startuml
+
+title Sequence Diagram for QR code Payment Workflow:
+
+actor Customer
+actor Vendor
+Participant "Vending Machine" as VM
+database "Inventory Database" as DB
+actor "Wallet System" as WS
+
+Customer -> VM: Approach
+Customer -> VM: Scan QR code
+activate VM
+VM -> WS: Is QR Code Recognized?
+activate WS
+alt QR Code Recognized
+    WS --> VM: QR Code Validated
+    VM -> VM: Unlock Door
+    VM -> VM: Display "Welcome"
+    VM -> VM: Display "Please pick your items"
+    loop Select Items
+        Customer -> VM: Selects Item
+        alt Item Placed Back Incorrectly
+            VM -> VM: Display "Error! Please place the item back in its place."
+        else Item Removed Correctly
+            VM -> VM: Display "You picked up 'A' item [updated in the cart]"
+        end
+        VM -> VM: Update Cart
+    end
+    Customer -> VM: Close Door
+    VM -> VM: Display "Proceeding to payment"
+    VM -> VM: Check Inventory
+    alt Insufficient Inventory
+        VM -> Vendor: Alert for Restocking
+        Vendor -> Vendor: Check Inventory Report
+        Vendor -> Vendor: Restock Items
+        Vendor -> DB: Update Product Database
+        Vendor --> VM: Inventory Restocked
+    else Sufficient Inventory
+        alt Sufficient Funds
+            VM -> WS: Deduct Amount from Wallet
+            WS --> VM: Payment Successful
+            VM -> VM: Display "Transaction Complete"
+            WS --> Customer: Transaction Complete
+        else Insufficient Funds
+            VM -> WS: Deduct Amount from Wallet
+            WS --> VM: Transaction Declined (Insufficient Funds)
+            VM -> VM: Display "Transaction Declined: Insufficient Funds"
+            WS --> Customer: Transaction Declined
+        end
+    end
+else QR Code Not Recognized
+    VM -> VM: Display "Invalid QR code. Please try again."
+end
+
+deactivate VM
+deactivate WS
 @enduml
