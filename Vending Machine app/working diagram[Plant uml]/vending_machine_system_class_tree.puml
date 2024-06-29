@@ -1,0 +1,80 @@
+@startuml
+class VendingMachine {
+    - inventory: Map<Item, Integer>
+    - paymentGateway: PaymentGateway
+    - inventoryDatabase: InventoryDatabase
+    - vendor: Vendor
+    - display: Display
+    - door: Door
+    - cardReader: CardReader
+    - qrCodeScanner: QRCodeScanner
+    - paymentMethod: PaymentMethod
+    - userDatabase: UserDatabase
+
+    + displayWelcomeMessage(): void
+    + validateCard(cardNumber: string): boolean
+    + validateQRCode(qrCode: string): boolean
+    + unlockDoor(): void
+    + displayMessage(message: string): void
+    + checkInventory(): boolean
+    + chargeCard(amount: double): boolean
+    + deductAmountFromWallet(amount: double): boolean
+    + notifyVendorForRestocking(): void
+}
+
+class Item {
+    - id: int
+    - name: string
+    - price: double
+}
+
+class PaymentGateway {
+    + validateCard(cardNumber: string): boolean
+    + chargeCard(amount: double): boolean
+}
+
+class InventoryDatabase {
+    + checkInventory(): boolean
+    + restockItems(items: List<Item>): void
+}
+
+class Vendor {
+    + alertForRestocking(): void
+}
+
+class Display {
+    + showMessage(message: string): void
+}
+
+class Door {
+    + unlock(): void
+    + close(): void
+}
+
+class CardReader {
+    + readCard(): string
+}
+
+class QRCodeScanner {
+    + scanQRCode(): string
+}
+
+class PaymentMethod {
+    + makePayment(amount: double): boolean
+}
+
+class UserDatabase {
+    + checkUserRegistration(userId: string): boolean
+}
+
+VendingMachine -- InventoryDatabase
+VendingMachine -- PaymentGateway
+VendingMachine -- Vendor
+VendingMachine -- Display
+VendingMachine -- Door
+VendingMachine -- CardReader
+VendingMachine -- QRCodeScanner
+VendingMachine -- PaymentMethod
+VendingMachine -- UserDatabase
+VendingMachine "1" *-- "0..*" Item
+@enduml

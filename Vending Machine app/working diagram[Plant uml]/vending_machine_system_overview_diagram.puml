@@ -1,0 +1,58 @@
+@startuml
+left to right direction
+
+package "User Interface" {
+    [Customer]
+}
+
+package "Vending Machine System" {
+    [Vending Machine] as vm
+    [Inventory Database] as id
+    [Payment Gateway] as pg
+    [Vendor]
+    [User Database]
+}
+
+package "Hardware Components" {
+    [Display]
+    [Door]
+    [Card Reader] as cr
+    [QR Code Scanner] as qr
+}
+
+package "External Systems" {
+    [Customer's Wallet] as cw
+}
+
+Customer --> vm: Approach
+Customer --> vm: Tap Card/QR Code
+
+vm --> Customer: Display Welcome Message
+
+vm -> id: Check Inventory
+id --> vm: Inventory Status
+
+vm -> pg: Validate Card
+pg --> vm: Card Validation Result
+
+vm -> pg: Charge Card
+pg --> vm: Payment Result
+
+vm -> Vendor: Alert for Restocking
+
+Customer --> vm: Select Items
+vm -> Door: Unlock
+Door --> vm: Door Status
+
+vm -> Display: Show Message
+Display --> Customer: Message
+
+vm -> cr: Read Card
+cr --> vm: Card Information
+
+vm -> qr: Scan QR Code
+qr --> vm: QR Code Information
+
+Customer --> cw: Deduct Amount
+cw --> vm: Payment Result
+@enduml
